@@ -1,0 +1,5 @@
+apple.com
+avast.com
+dropbox.com
+facebook.com
+stackoverflow.com
