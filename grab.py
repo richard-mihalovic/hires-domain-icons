@@ -100,7 +100,6 @@ def grab_domain_icons():
                 if not image.startswith('http://') and not image.startswith('https://'):
                     image = domain_url + '/' + image
 
-                print(image)
                 r = requests.get(image)
                 __save_image(r.content, './images/' + file_name)
         except:
