@@ -5,7 +5,7 @@ import shutil
 import os
 
 
-def load_domains_from_file():
+def __load_domains_from_file():
     domains = []
     with open('domains.txt') as f:
         domains = f.readlines()
@@ -13,12 +13,12 @@ def load_domains_from_file():
     return domains
 
 
-def grab_url(url):
+def __grab_url(url):
     r = requests.get(url)
     return r.text
 
 
-def extract_images(html):
+def __extract_images(html):
     tree = lxml.html.fromstring(html)
     images = []
 
@@ -38,59 +38,73 @@ def extract_images(html):
     return images
 
 
-def save_image(content, file_name):
+def __save_image(content, file_name):
     with open(file_name, 'wb') as f:
         f.write(content)
 
 
-def extract_file_name(file_name):
+def __extract_file_name(file_name):
     lpos = file_name.rfind('/')
     return file_name[lpos + 1:]
 
 
-def extract_extension(file_name):
+def __extract_extension(file_name):
     lpos = file_name.rfind('.')
     lpos += 1
     return file_name[lpos:lpos + 3]
 
-# delete images directory
-if os.path.exists('images'):
-    shutil.rmtree('images')
 
-# create images directory
-if not os.path.exists('images'):
-    os.makedirs('images')
+def __setup_images_directory():
+    # delete images directory
+    if os.path.exists('images'):
+        shutil.rmtree('images')
 
-for domain in load_domains_from_file():
-    domain = domain.replace('\n', '').replace('\r', '')
-    try:
-        domain_url = domain
-        if 'http://' not in domain:
-            domain_url = 'http://' + domain
+    # create images directory
+    if not os.path.exists('images'):
+        os.makedirs('images')
 
-        print('Search for icons: ' + domain)
+def grab_domain_icons():
 
-        html = grab_url(domain_url)
-        images = extract_images(html)
-        image_counter = 1
-        for image in images:
-            if '.ico' in image:
-                continue
+    __setup_images_directory()
+    for domain in __load_domains_from_file():
 
-            file_name = extract_file_name(image)
-            extension = extract_extension(file_name)
+        domain = domain.replace('\n', '').replace('\r', '')
+        try:
+            domain_url = domain
+            if 'http://' not in domain:
+                domain_url = 'http://' + domain
 
-            if len(images) == 1:
-                file_name = domain + '.' + extension
-            else:
-                file_name = domain + str(image_counter) + '.' + extension
+            print('Search for icons: ' + domain)
 
-            image_counter += 1
+            html = __grab_url(domain_url)
+            images = __extract_images(html)
+            image_counter = 1
+            for image in images:
+                if '.ico' in image:
+                    continue
 
-            print('    > ' + file_name)
-            if image.startswith('//'):
-                image = 'http:' + image
-            r = requests.get(image)
-            save_image(r.content, './images/' + file_name)
-    except:
-        print('Failed to process: ' + domain)
+                file_name = __extract_file_name(image)
+                extension = __extract_extension(file_name)
+
+                if len(images) == 1:
+                    file_name = domain + '.' + extension
+                else:
+                    file_name = domain + str(image_counter) + '.' + extension
+
+                image_counter += 1
+
+                print('    > ' + file_name)
+                if image.startswith('//'):
+                    image = 'http:' + image
+
+                if not image.startswith('http://') and not image.startswith('https://'):
+                    image = domain_url + '/' + image
+
+                print(image)
+                r = requests.get(image)
+                __save_image(r.content, './images/' + file_name)
+        except:
+            print('Failed to process: ' + domain)
+
+if __name__ == "__main__":
+    grab_domain_icons()
