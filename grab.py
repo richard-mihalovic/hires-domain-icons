@@ -14,7 +14,8 @@ def __load_domains_from_file():
 
 
 def __grab_url(url):
-    r = requests.get(url)
+    r = requests.get(url, allow_redirects=True, timeout=3)
+    # r = requests.get(url)
     return r.text
 
 
@@ -30,7 +31,19 @@ def __extract_images(html):
     for element in elements:
         images.append(element.get('href'))
 
+    elements = tree.xpath('//link[@rel="apple-touch-icon-precomposed"]')
+    for element in elements:
+        images.append(element.get('href'))
+
+    elements = tree.xpath('//meta[@itemprop="image"]')
+    for element in elements:
+        images.append(element.get('content'))
+
     if len(elements) == 0:
+        elements = tree.xpath('//link[@rel="icon"]')
+        for element in elements:
+            images.append(element.get('href'))
+
         elements = tree.xpath('//link[@rel="shortcut icon"]')
         for element in elements:
             images.append(element.get('href'))
@@ -102,6 +115,9 @@ def grab_domain_icons():
 
                 r = requests.get(image)
                 __save_image(r.content, './images/' + file_name)
+        except KeyboardInterrupt:
+            import sys
+            sys.exit()
         except:
             print('Failed to process: ' + domain)
 
