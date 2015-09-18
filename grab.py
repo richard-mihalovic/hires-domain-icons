@@ -39,14 +39,17 @@ def __extract_images(html):
     for element in elements:
         images.append(element.get('content'))
 
-    if len(elements) == 0:
-        elements = tree.xpath('//link[@rel="icon"]')
-        for element in elements:
-            images.append(element.get('href'))
+    elements = tree.xpath('//meta[@name="msapplication-TileImage"]')
+    for element in elements:
+        images.append(element.get('content'))
 
-        elements = tree.xpath('//link[@rel="shortcut icon"]')
-        for element in elements:
-            images.append(element.get('href'))
+    elements = tree.xpath('//link[@rel="icon"]')
+    for element in elements:
+        images.append(element.get('href'))
+
+    elements = tree.xpath('//link[@rel="shortcut icon"]')
+    for element in elements:
+        images.append(element.get('href'))
 
     return images
 
@@ -76,6 +79,7 @@ def __setup_images_directory():
     if not os.path.exists('images'):
         os.makedirs('images')
 
+
 def grab_domain_icons():
 
     __setup_images_directory()
@@ -93,6 +97,7 @@ def grab_domain_icons():
             images = __extract_images(html)
             image_counter = 1
             for image in images:
+                # skip files with ico extension
                 if '.ico' in image:
                     continue
 
